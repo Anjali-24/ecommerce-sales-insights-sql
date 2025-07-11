@@ -1,0 +1,155 @@
+ecommerce-sales-insights-sql/
+│
+├── README.md
+├── schema/
+│   ├── create_tables.sql
+│   └── sample_data.sql
+├── queries/
+│   ├── total_sales_by_category.sql
+│   ├── top_customers.sql
+│   ├── first_order_per_customer.sql
+│   └── monthly_revenue.sql
+└── output/(on running the codes)
+
+
+
+# E-Commerce Sales Insights (SQL Project)
+
+This project analyzes e-commerce data using SQL joins, aggregate functions, grouping, and subqueries. Developed and tested using DB Fiddle.
+
+## Technologies
+- MySQL (DB Fiddle)
+
+## Schema Overview
+Tables:
+- `customers`
+- `products`
+- `orders`
+- `order_items`
+
+## Key Insights
+- Total sales per product category
+- Top 3 customers by spending
+- Monthly revenue trends
+- First order per customer
+
+## Files
+- `schema/`: DDL + insert scripts
+- `queries/`: Insightful SQL queries
+- `output/`: Optional sample output
+
+## Preview
+Run the live schema and queries: [Link to DB Fiddle](https://www.db-fiddle.com/f/uvuoydV8GRoHW9KTTzCCYs/4)
+
+
+**schema/create_tables.sql
+
+-- Customers table
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    region VARCHAR(50)
+);
+
+
+-- Products table
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    category VARCHAR(50)
+);
+
+
+-- Orders table
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_date DATE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+
+
+
+-- Order Items table
+CREATE TABLE order_items (
+    order_item_id INT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    price DECIMAL(10, 2),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+
+**schema/sample_data.sql
+
+--insert into customers table
+INSERT INTO customers (customer_id, name, region) VALUES
+(1, 'Anjali', 'South'),
+(2, 'Mohit', 'North'),
+(3, 'Priya', 'East'),
+(4, 'Rahul', 'West');
+
+
+--insert into products table
+INSERT INTO products (product_id, name, category) VALUES
+(101, 'Laptop', 'Electronics'),
+(102, 'Headphones', 'Electronics'),
+(103, 'Desk Chair', 'Furniture'),
+(104, 'Notebook', 'Stationery');
+
+
+--insert into orders table
+INSERT INTO orders (order_id, customer_id, order_date) VALUES
+(1001, 1, '2024-06-10'),
+(1002, 2, '2024-06-11'),
+(1003, 1, '2024-06-12'),
+(1004, 3, '2024-06-13');
+
+--insert into order_items table
+INSERT INTO order_items (order_item_id, order_id, product_id, quantity, price) VALUES
+(1, 1001, 101, 1, 50000.00),
+(2, 1001, 102, 2, 1500.00),
+(3, 1002, 103, 1, 7000.00),
+(4, 1003, 104, 5, 50.00),
+(5, 1004, 101, 1, 50000.00);
+
+**queries/*.sql
+
+/* Query 1 - Total Sales per product category*/
+
+select p.category, o.price from products p
+left join order_items o on 
+p.product_id = o.product_id
+;
+
+/* Query 2 - Top 3 customers by spend*/
+
+select c.name , i.price from order_items i
+join orders o on i.order_id = o.order_id
+join customers c on o.customer_id = c.customer_id
+order by i.price desc
+limit 3;
+
+/* Query 3 - Monthly Revenue*/
+
+select monthname(o.order_date) as Month , i.price as Revenue
+from orders o
+left join order_items i on o.order_id = i.order_id
+;
+
+/* Query 4 - First order per customer*/
+
+select c.name , min(o.order_date) as first_order
+from customers c 
+left join orders o on
+c.customer_id = o.customer_id
+where o.order_date is not null
+group by c.name;
+
+/* Query 5 - Most sold product by qty*/
+
+select product_id, quantity from order_items
+order by quantity desc
+limit 1;
